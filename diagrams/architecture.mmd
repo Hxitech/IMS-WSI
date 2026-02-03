@@ -1,0 +1,32 @@
+%% 数字病理切片管理平台 - 高层架构图（Mermaid）
+flowchart LR
+  U[用户浏览器\n医生/技师/管理员] -->|HTTPS| FE[Web 前端\nVue/React + WSI Viewer]
+  FE -->|REST/GraphQL| API[应用后端 API\n认证/权限/业务]
+
+  subgraph Core[核心服务]
+    API --> META[(元数据数据库\nPostgreSQL/MySQL)]
+    API --> CACHE[(Redis\n缓存/会话/队列)]
+    API --> OBJ[(对象存储\nS3/MinIO/本地)]
+    API --> FS[(本地文件系统\n缓存/临时区)]
+  end
+
+  subgraph Ingest[入库与处理流水线]
+    UP[上传服务\n分片/断点续传] --> OBJ
+    API --> UP
+    API --> Q[任务队列\n入库/转码/OCR]
+    Q --> W1[Worker: 转码/金字塔化\nOpenSlide/BioFormats]
+    Q --> W2[Worker: 标签识别\nOCR/条码/二维码]
+    W1 --> OBJ
+    W2 --> META
+  end
+
+  subgraph Ops[运维监控]
+    MON[监控/告警\n磁盘/队列/错误率] --> API
+  end
+
+  subgraph Share[分享/外借]
+    API --> TOK[分享令牌/有效期\n访问审计]
+  end
+
+  META <-->|读写| API
+  OBJ <-->|WSI tile/附件| FE

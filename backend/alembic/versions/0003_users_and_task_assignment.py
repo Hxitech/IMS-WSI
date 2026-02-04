@@ -17,29 +17,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Ensure enum types exist before columns use them (PostgreSQL)
-    # Use DO blocks for compatibility (CREATE TYPE IF NOT EXISTS is not supported in older PG versions)
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            CREATE TYPE userrole AS ENUM ('admin','doctor','tech');
-        EXCEPTION
-            WHEN duplicate_object THEN NULL;
-        END $$;
-        """
-    )
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            CREATE TYPE taskassignstrategy AS ENUM ('manual','by_count','by_time');
-        EXCEPTION
-            WHEN duplicate_object THEN NULL;
-        END $$;
-        """
-    )
-
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -47,7 +24,7 @@ def upgrade() -> None:
         sa.Column("full_name", sa.String(length=255), nullable=True),
         sa.Column(
             "role",
-            sa.Enum("admin", "doctor", "tech", name="userrole", create_type=False),
+            sa.Enum("admin", "doctor", "tech", name="userrole"),
             nullable=False,
             server_default="tech",
         ),
@@ -63,7 +40,7 @@ def upgrade() -> None:
         "tasks",
         sa.Column(
             "assign_strategy",
-            sa.Enum("manual", "by_count", "by_time", name="taskassignstrategy", create_type=False),
+            sa.Enum("manual", "by_count", "by_time", name="taskassignstrategy"),
             nullable=False,
             server_default="manual",
         ),

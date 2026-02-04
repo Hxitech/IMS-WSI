@@ -4,6 +4,8 @@
     <nav style="display:flex; gap:12px; margin-bottom: 16px;">
       <RouterLink to="/">Home</RouterLink>
       <RouterLink to="/viewer">Viewer</RouterLink>
+      <RouterLink to="/task-center">Task Center</RouterLink>
+      <RouterLink to="/login">Login</RouterLink>
     </nav>
     <RouterView />
   </div>

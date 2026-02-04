@@ -19,3 +19,10 @@ export const updateTask = (taskId, payload) => api.patch(`/tasks/${taskId}`, pay
 
 export const fileUrl = (relPath) => `${baseURL}/files/${relPath}`
 
+
+
+// Task Center
+export const taskCenterTasks = () => api.get('/task-center/tasks').then(r => r.data)
+export const taskCenterUsers = () => api.get('/task-center/users').then(r => r.data)
+export const taskAssignManual = (taskId, assignee_id) => api.post(`/task-center/tasks/${taskId}/assign`, { assignee_id }).then(r => r.data)
+export const taskAssignAuto = (taskId, payload) => api.post(`/task-center/tasks/${taskId}/auto-assign`, payload).then(r => r.data)

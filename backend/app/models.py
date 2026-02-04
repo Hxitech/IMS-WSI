@@ -13,6 +13,35 @@ class TaskStatus(str, enum.Enum):
     done = "done"
 
 
+class UserRole(str, enum.Enum):
+    admin = "admin"
+    doctor = "doctor"
+    tech = "tech"
+
+
+class TaskAssignStrategy(str, enum.Enum):
+    manual = "manual"
+    by_count = "by_count"
+    by_time = "by_time"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(150), unique=True, index=True)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.tech)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    assigned_tasks: Mapped[list["Task"]] = relationship(
+        back_populates="assignee",
+        foreign_keys="Task.assignee_id",
+    )
+
+
 class Case(Base):
     __tablename__ = "cases"
 
@@ -77,6 +106,10 @@ class Task(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), default=TaskStatus.todo)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    assign_strategy: Mapped[TaskAssignStrategy] = mapped_column(Enum(TaskAssignStrategy), default=TaskAssignStrategy.manual)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     case: Mapped[Case] = relationship(back_populates="tasks")
+    assignee: Mapped[User | None] = relationship(back_populates="assigned_tasks", foreign_keys=[assignee_id])

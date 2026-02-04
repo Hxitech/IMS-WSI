@@ -6,10 +6,12 @@ RUN pip install --no-cache-dir --upgrade pip
 
 COPY pyproject.toml /app/pyproject.toml
 COPY uv.lock /app/uv.lock
+COPY requirements.txt /app/requirements.txt
 
 # If uv.lock exists we use uv, else fallback to pip (dev friendliness)
 RUN pip install --no-cache-dir uv || true
-RUN if [ -f uv.lock ]; then uv pip install --system -r <(uv export --format requirements-txt); else pip install --no-cache-dir -e .; fi
+# NOTE: avoid bash process substitution (<(...)) because default shell is /bin/sh
+RUN if [ -f uv.lock ]; then uv export --format requirements-txt --output-file /tmp/requirements.txt && uv pip install --system -r /tmp/requirements.txt; else pip install --no-cache-dir -r requirements.txt; fi
 
 COPY . /app
 

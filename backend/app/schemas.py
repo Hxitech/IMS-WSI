@@ -14,6 +14,7 @@ class CaseRead(BaseModel):
     title: str
     description: str | None
     is_archived: bool
+    slide_count: int = 0
     created_at: datetime
 
     class Config:
@@ -31,7 +32,20 @@ class SlideRead(BaseModel):
     case_id: int
     is_archived: bool
     label: str
+
+    folder: str | None = None
     filename: str | None = None
+    ai_module: str | None = None
+    scan_magnification: int | None = None
+    ai_suggestion: str | None = None
+    processing_status: str | None = None
+    label_png_path: str | None = None
+    slide_number: int | None = None
+    quality: str | None = None
+    clarity: str | None = None
+    review_result: str | None = None
+    updated_at: datetime | None = None
+
     storage_path: str | None = None
     ingested_ok: bool | None = None
     level_count: int | None = None

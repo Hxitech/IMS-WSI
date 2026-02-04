@@ -25,6 +25,16 @@ class TaskAssignStrategy(str, enum.Enum):
     by_time = "by_time"
 
 
+class UserListPref(Base):
+    __tablename__ = "user_list_prefs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    key: Mapped[str] = mapped_column(String(64), index=True)
+    value_json: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -66,7 +76,24 @@ class Slide(Base):
     label: Mapped[str] = mapped_column(String(255))
 
     # file & ingest metadata
+    folder: Mapped[str | None] = mapped_column(String(512), nullable=True)
     filename: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
+    # ai metadata
+    ai_module: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    scan_magnification: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ai_suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    label_png_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
+    # slide metadata
+    slide_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    quality: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    clarity: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    review_result: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     storage_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     ingested_ok: Mapped[bool] = mapped_column(Boolean, default=False)
     level_count: Mapped[int | None] = mapped_column(Integer, nullable=True)

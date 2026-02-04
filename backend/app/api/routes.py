@@ -12,12 +12,16 @@ from app.services.openslide_service import read_meta_and_thumbnail
 from app.api.auth import router as auth_router
 from app.api.task_center import router as task_center_router
 from app.api.ops import router as ops_router
+from app.api.list_prefs import router as list_prefs_router
+from app.api.listing import router as listing_router
 
 router = APIRouter()
 
 router.include_router(auth_router)
 router.include_router(task_center_router)
 router.include_router(ops_router)
+router.include_router(list_prefs_router)
+router.include_router(listing_router)
 
 
 @router.get("/health")
@@ -32,11 +36,6 @@ def create_case(payload: schemas.CaseCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(obj)
     return obj
-
-
-@router.get("/cases", response_model=list[schemas.CaseRead])
-def list_cases(db: Session = Depends(get_db)):
-    return list(db.scalars(select(models.Case).order_by(models.Case.id.desc())).all())
 
 
 @router.get("/cases/{case_id}", response_model=schemas.CaseRead)
@@ -57,11 +56,6 @@ def create_slide(payload: schemas.SlideCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(obj)
     return obj
-
-
-@router.get("/cases/{case_id}/slides", response_model=list[schemas.SlideRead])
-def list_slides(case_id: int, db: Session = Depends(get_db)):
-    return list(db.scalars(select(models.Slide).where(models.Slide.case_id == case_id).order_by(models.Slide.id.desc())).all())
 
 
 @router.post("/cases/{case_id}/slides/upload", response_model=schemas.SlideRead)

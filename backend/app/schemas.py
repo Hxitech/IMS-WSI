@@ -29,6 +29,15 @@ class SlideRead(BaseModel):
     id: int
     case_id: int
     label: str
+    filename: str | None = None
+    storage_path: str | None = None
+    ingested_ok: bool | None = None
+    level_count: int | None = None
+    width: int | None = None
+    height: int | None = None
+    mpp_x: float | None = None
+    mpp_y: float | None = None
+    thumb_path: str | None = None
     dzi_path: str | None
     created_at: datetime
 

@@ -30,8 +30,24 @@ class Slide(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     case_id: Mapped[int] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+
+    # human/recognized label (from filename/OCR/barcode etc.)
     label: Mapped[str] = mapped_column(String(255))
+
+    # file & ingest metadata
+    filename: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    storage_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    ingested_ok: Mapped[bool] = mapped_column(Boolean, default=False)
+    level_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mpp_x: Mapped[float | None] = mapped_column(nullable=True)
+    mpp_y: Mapped[float | None] = mapped_column(nullable=True)
+    thumb_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
+    # legacy placeholder for future DZI support
     dzi_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     case: Mapped[Case] = relationship(back_populates="slides")

@@ -2,7 +2,7 @@
   <div>
     <div ref="host" style="width: 100%; height: 70vh; border: 1px solid #ddd;"></div>
     <p style="color:#666; font-size: 12px;">
-      OpenSeadragon placeholder. Set <code>tileSourceUrl</code> to a DZI/IIIF endpoint.
+      OpenSeadragon viewer. You can load a plain image URL (MVP) or later switch to DZI/tiles.
     </p>
   </div>
 </template>

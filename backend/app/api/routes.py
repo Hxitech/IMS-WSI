@@ -7,6 +7,7 @@ import shutil
 from app.db.session import get_db
 from app.core.config import settings
 from app import models, schemas
+from app.services.openslide_service import read_meta_and_thumbnail
 
 router = APIRouter()
 
@@ -53,6 +54,49 @@ def create_slide(payload: schemas.SlideCreate, db: Session = Depends(get_db)):
 @router.get("/cases/{case_id}/slides", response_model=list[schemas.SlideRead])
 def list_slides(case_id: int, db: Session = Depends(get_db)):
     return list(db.scalars(select(models.Slide).where(models.Slide.case_id == case_id).order_by(models.Slide.id.desc())).all())
+
+
+@router.post("/cases/{case_id}/slides/upload", response_model=schemas.SlideRead)
+def upload_slide(case_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    case = db.get(models.Case, case_id)
+    if not case:
+        raise HTTPException(404, "case not found")
+
+    # create slide record first
+    label = Path(file.filename).stem
+    slide = models.Slide(case_id=case_id, label=label, filename=file.filename)
+    db.add(slide)
+    db.commit()
+    db.refresh(slide)
+
+    storage_root = Path(settings.storage_root)
+    dest_dir = storage_root / "slides" / str(case_id) / str(slide.id) / "raw"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = dest_dir / file.filename
+
+    with dest_path.open("wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # openslide ingest + thumbnail
+    thumb_path = storage_root / "slides" / str(case_id) / str(slide.id) / "thumb.jpg"
+    try:
+        meta = read_meta_and_thumbnail(str(dest_path), str(thumb_path))
+        slide.ingested_ok = True
+        slide.level_count = meta.level_count
+        slide.width = meta.width
+        slide.height = meta.height
+        slide.mpp_x = meta.mpp_x
+        slide.mpp_y = meta.mpp_y
+        slide.thumb_path = str(thumb_path.relative_to(storage_root))
+    except Exception:
+        slide.ingested_ok = False
+
+    slide.storage_path = str(dest_path.relative_to(storage_root))
+
+    db.add(slide)
+    db.commit()
+    db.refresh(slide)
+    return slide
 
 
 @router.post("/slides/{slide_id}/attachments", response_model=schemas.AttachmentRead)

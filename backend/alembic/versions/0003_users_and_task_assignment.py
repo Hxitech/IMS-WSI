@@ -45,7 +45,12 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("username", sa.String(length=150), nullable=False),
         sa.Column("full_name", sa.String(length=255), nullable=True),
-        sa.Column("role", sa.Enum("admin", "doctor", "tech", name="userrole"), nullable=False, server_default="tech"),
+        sa.Column(
+            "role",
+            sa.Enum("admin", "doctor", "tech", name="userrole", create_type=False),
+            nullable=False,
+            server_default="tech",
+        ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -58,7 +63,7 @@ def upgrade() -> None:
         "tasks",
         sa.Column(
             "assign_strategy",
-            sa.Enum("manual", "by_count", "by_time", name="taskassignstrategy"),
+            sa.Enum("manual", "by_count", "by_time", name="taskassignstrategy", create_type=False),
             nullable=False,
             server_default="manual",
         ),

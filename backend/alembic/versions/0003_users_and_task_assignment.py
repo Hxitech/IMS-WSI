@@ -17,6 +17,10 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Ensure enum types exist before columns use them (PostgreSQL)
+    op.execute("CREATE TYPE IF NOT EXISTS userrole AS ENUM ('admin','doctor','tech')")
+    op.execute("CREATE TYPE IF NOT EXISTS taskassignstrategy AS ENUM ('manual','by_count','by_time')")
+
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True),

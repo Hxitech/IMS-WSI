@@ -18,8 +18,27 @@ depends_on = None
 
 def upgrade() -> None:
     # Ensure enum types exist before columns use them (PostgreSQL)
-    op.execute("CREATE TYPE IF NOT EXISTS userrole AS ENUM ('admin','doctor','tech')")
-    op.execute("CREATE TYPE IF NOT EXISTS taskassignstrategy AS ENUM ('manual','by_count','by_time')")
+    # Use DO blocks for compatibility (CREATE TYPE IF NOT EXISTS is not supported in older PG versions)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE userrole AS ENUM ('admin','doctor','tech');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END $$;
+        """
+    )
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE taskassignstrategy AS ENUM ('manual','by_count','by_time');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END $$;
+        """
+    )
 
     op.create_table(
         "users",

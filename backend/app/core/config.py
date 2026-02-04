@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     storage_root: str = "./storage"
     cors_origins: str = "http://localhost:5173"
 
+    # Ops module
+    ops_warn_threshold: int = 80  # percent used
+    ops_trash_retention_days: int = 30
+
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 

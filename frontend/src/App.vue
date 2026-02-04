@@ -5,6 +5,7 @@
       <RouterLink to="/">Home</RouterLink>
       <RouterLink to="/viewer">Viewer</RouterLink>
       <RouterLink to="/task-center">Task Center</RouterLink>
+      <RouterLink to="/ops">Ops</RouterLink>
       <RouterLink to="/login">Login</RouterLink>
     </nav>
     <RouterView />

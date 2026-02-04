@@ -48,6 +48,7 @@ class Case(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     slides: Mapped[list["Slide"]] = relationship(back_populates="case", cascade="all, delete-orphan")
@@ -59,6 +60,7 @@ class Slide(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     case_id: Mapped[int] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"))
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # human/recognized label (from filename/OCR/barcode etc.)
     label: Mapped[str] = mapped_column(String(255))

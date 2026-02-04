@@ -11,11 +11,13 @@ from app import models, schemas
 from app.services.openslide_service import read_meta_and_thumbnail
 from app.api.auth import router as auth_router
 from app.api.task_center import router as task_center_router
+from app.api.ops import router as ops_router
 
 router = APIRouter()
 
 router.include_router(auth_router)
 router.include_router(task_center_router)
+router.include_router(ops_router)
 
 
 @router.get("/health")

@@ -22,3 +22,4 @@ docker compose up --build
 - `docs/api.md`
 - `docs/data-model.md`
 - `docs/storage-layout.md`
+- `docs/ops.md` (admin-only storage monitoring/cleanup/trash/export)

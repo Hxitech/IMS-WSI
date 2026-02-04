@@ -13,6 +13,7 @@ class CaseRead(BaseModel):
     id: int
     title: str
     description: str | None
+    is_archived: bool
     created_at: datetime
 
     class Config:
@@ -28,6 +29,7 @@ class SlideCreate(BaseModel):
 class SlideRead(BaseModel):
     id: int
     case_id: int
+    is_archived: bool
     label: str
     filename: str | None = None
     storage_path: str | None = None

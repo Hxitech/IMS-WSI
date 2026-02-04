@@ -17,6 +17,10 @@
             <span v-else style="color: #999;"> [not ingested]</span>
           </div>
           <div v-if="thumbSrc(s)" style="margin-top: 4px;">
+            <div style="margin-top: 6px;">
+              <router-link v-if="s.ingested_ok" :to="`/slides/${s.id}/view`">Open viewer</router-link>
+              <span v-else style="color:#999;">Ingest required for viewer</span>
+            </div>
             <img :src="thumbSrc(s)" alt="thumb" style="max-width: 280px; border: 1px solid #eee;" />
             <div style="font-size: 12px; color: #666;">
               {{ s.width }}x{{ s.height }} levels={{ s.level_count }} mpp={{ s.mpp_x }}

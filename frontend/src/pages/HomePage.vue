@@ -17,18 +17,18 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import api from '../services/api'
+import { listCases, createCase } from '../services/api'
 
 const cases = ref([])
 const title = ref('')
 
 async function load() {
-  cases.value = (await api.get('/cases')).data
+  cases.value = await listCases()
 }
 
 async function create() {
   if (!title.value.trim()) return
-  await api.post('/cases', { title: title.value, description: null })
+  await createCase({ title: title.value, description: null })
   title.value = ''
   await load()
 }

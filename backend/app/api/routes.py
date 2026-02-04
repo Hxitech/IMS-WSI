@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pathlib import Path
@@ -155,3 +156,90 @@ def update_task(task_id: int, payload: schemas.TaskUpdate, db: Session = Depends
 @router.get("/cases/{case_id}/tasks", response_model=list[schemas.TaskRead])
 def list_tasks(case_id: int, db: Session = Depends(get_db)):
     return list(db.scalars(select(models.Task).where(models.Task.case_id == case_id).order_by(models.Task.id.desc())).all())
+
+
+@router.get("/slides/{slide_id}", response_model=schemas.SlideRead)
+def get_slide(slide_id: int, db: Session = Depends(get_db)):
+    obj = db.get(models.Slide, slide_id)
+    if not obj:
+        raise HTTPException(404, "slide not found")
+    return obj
+
+
+@router.get("/slides/{slide_id}/info")
+def slide_info(slide_id: int, tileSize: int = 256, db: Session = Depends(get_db)):
+    slide = db.get(models.Slide, slide_id)
+    if not slide:
+        raise HTTPException(404, "slide not found")
+    if not slide.ingested_ok or not slide.storage_path or not slide.width or not slide.height or not slide.level_count:
+        raise HTTPException(409, "slide not ingested")
+
+    # Provide all level dimensions for OpenSeadragon custom tile source.
+    # Level index 0 is highest resolution.
+    dims = []
+    for level in range(int(slide.level_count)):
+        ds = 2**level
+        dims.append({"level": level, "width": (slide.width + ds - 1)//ds, "height": (slide.height + ds - 1)//ds})
+
+    return {
+        "id": slide.id,
+        "case_id": slide.case_id,
+        "label": slide.label,
+        "tileSize": tileSize,
+        "level_count": int(slide.level_count),
+        "width": int(slide.width),
+        "height": int(slide.height),
+        "levels": dims,
+        "mpp_x": slide.mpp_x,
+        "mpp_y": slide.mpp_y,
+        "thumb_url": f"/files/{slide.thumb_path}" if slide.thumb_path else None,
+    }
+
+
+@router.get("/slides/{slide_id}/tile/{level}/{x}/{y}.jpg")
+def slide_tile(slide_id: int, level: int, x: int, y: int, tileSize: int = 256, db: Session = Depends(get_db)):
+    slide = db.get(models.Slide, slide_id)
+    if not slide:
+        raise HTTPException(404, "slide not found")
+    if not slide.ingested_ok or not slide.storage_path:
+        raise HTTPException(409, "slide not ingested")
+
+    if level < 0 or x < 0 or y < 0:
+        raise HTTPException(400, "invalid tile coordinate")
+
+    from pathlib import Path
+    storage_root = Path(settings.storage_root)
+    cache_path = storage_root / "tiles" / str(slide_id) / str(level) / f"{x}_{y}.jpg"
+    if cache_path.exists():
+        return FileResponse(str(cache_path), media_type="image/jpeg")
+
+    slide_path = storage_root / slide.storage_path
+
+    try:
+        import openslide  # type: ignore
+    except Exception as e:
+        raise HTTPException(500, "openslide not available") from e
+
+    if not slide_path.exists():
+        raise HTTPException(404, "slide file not found")
+
+    osr = openslide.OpenSlide(str(slide_path))
+    try:
+        if level >= osr.level_count:
+            raise HTTPException(404, "level out of range")
+
+        downsample = float(osr.level_downsamples[level])
+        base_x = int(x * tileSize * downsample)
+        base_y = int(y * tileSize * downsample)
+
+        region = osr.read_region((base_x, base_y), level, (tileSize, tileSize))
+        img = region.convert("RGB")
+
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        img.save(str(cache_path), format="JPEG", quality=85, optimize=True)
+        return FileResponse(str(cache_path), media_type="image/jpeg")
+    finally:
+        try:
+            osr.close()
+        except Exception:
+            pass
